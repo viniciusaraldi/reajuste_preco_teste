@@ -4,16 +4,13 @@ async function enviaArquivo(arq) {
         const planilhaCsv = new FormData()
         planilhaCsv.append('csvFile', arq)
 
-        const dados = await fetch(`http://localhost:3000/produtos/planilha`, {
-            method: "POST",
+        const dados = await fetch(`http://localhost:3000/produtos/via/planilha`, {
+            method: "PUT",
             body: planilhaCsv
         });
         
-        if (dados.ok) {
-            return true
-        } else {
-            return false
-        }
+        const data = await dados.json()
+        return data
     } catch (err) {
         return console.log("Erro: " + err.message)
     }

@@ -7,8 +7,8 @@ const routes = express.Router();
 routes
     .get("/produtos", produtoController.listaProduto)
     .get("/produtos/:id", produtoController.listaProdutoId)
-    .post("/produtos/planilha", upload.single('csvFile'), produtoController.atualizaPlanilhaProduto)
-    .put("/produtos/:id", produtoController.atualizaProduto)
+    // .post("/produtos/planilha", upload.single('csvFile'), produtoController.atualizaPlanilhaProduto)
+    .put("/produtos/via/planilha", upload.single('csvFile'), produtoController.atualizaProduto)
 
 
 module.exports = routes

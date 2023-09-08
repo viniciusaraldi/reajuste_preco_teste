@@ -35,58 +35,55 @@ class produtoController {
         }
     }
 
-    static atualizaPlanilhaProduto = async (req, res) => {
-        try {
-            if (!req.file || Object.keys(req.file).length === 0) {
-                return res.status(400).send('Nenhum arquivo foi enviado.');
-            }
+    // static atualizaPlanilhaProduto = async (req, res) => {
+    //     try {
+    //         if (!req.file || Object.keys(req.file).length === 0) {
+    //             return res.status(400).send('Nenhum arquivo foi enviado.');
+    //         }
 
-            const arquivo = req.file
-            const buffer = arquivo.buffer.toString()
-            const results = []
+    //         const arquivo = req.file
+    //         const buffer = arquivo.buffer.toString()
+    //         const results = []
 
-            fastcsv
-                .parseString(buffer, {headers: true})
-                .on('data', (data) => results.push(data))
-                .on('end', () => {
-                    console.log(results)
-                    return res.status(200).json({data: results}) 
-                })
-        } catch (Err) {
-            return res.status(500).json({data: Err.message})
-        }
-    }
+    //         fastcsv
+    //             .parseString(buffer, {headers: true})
+    //             .on('data', (data) => results.push(data))
+    //             .on('end', () => {
+    //                 console.log(results)
+    //                 return res.status(200).json({data: results}) 
+    //             })
+    //     } catch (Err) {
+    //         return res.status(500).json({data: Err.message})
+    //     }
+    // }
     
     static atualizaProduto = async (req, res) => {
         try {
-            const {id} = req.params;
-            const newInfos = req.body;
-            const verificaProduto = await validaPrecoProduto(id, newInfos)
-            if (verificaProduto !== true) {
-                return res.status(404).json({
-                    sucess: false,
-                    message: verificaProduto
-                })
-            } else {
-                const produtoAtualizado = await database.Produtos.update(newInfos, {
+            const arquivoAtualizaProduto = await buscaArquivo(req, res)
+            arquivoAtualizaProduto.forEach(async e => {
+                console.log(e)
+                const idProduto = await e.product_code;
+                console.log(idProduto)
+                const newInfos = await e.new_price;
+                console.log(newInfos)
+                
+                await validaPrecoProduto(idProduto, newInfos,req, res)
+                
+                await database.Produtos.update(newInfos, {
                     attributes: {
                         exclude: ['id']
                     },
                     where: {
-                        code: Number(id)
+                        code: Number(idProduto)
                     }
                 })
-                if (!produtoAtualizado) {
-                    return res.status(404).json({
-                        sucess: false,
-                        message: 'Produto não atualizado!'
-                    })
-                }
                 return res.status(200).json({
                     sucess: true,
-                    message: 'Produto atualizado com sucesso!'
+                    message: 'Atualizado com sucesso!'
                 })
-            }
+                
+            })
+            
         } catch (err) {
             return res.status(500).json({
                 sucess: false,
@@ -97,7 +94,36 @@ class produtoController {
 
 }
 
-async function validaPrecoProduto(id, infos) {
+async function buscaArquivo(req, res) {
+    try {
+        if (!req.file || Object.keys(req.file).length === 0) {
+            return res.status(400).send('Nenhum arquivo foi enviado.');
+        }
+
+        const arquivo = req.file
+        const buffer = arquivo.buffer.toString()
+
+        return new Promise((resolve, reject) => {
+            const results = [];
+
+            fastcsv
+                .parseString(buffer, { headers: true })
+                .on('data', (data) => results.push(data))
+                .on('end', () => {
+                    resolve(results);
+                    // const produto_code = results[0].product_code;
+                    // const new_price = results[0].new_price;
+                })
+                .on('error', (error) => {
+                    reject(error);
+                });
+        });
+    } catch (Err) {
+        return res.status(500).json({data: Err.message})
+    }
+}
+
+async function validaPrecoProduto(id, infos, req, res) {
     const buscaProduto = await database.Produtos.findOne({
         attributes: {
             exclude: ['id']
@@ -108,7 +134,7 @@ async function validaPrecoProduto(id, infos) {
     })
     const valorVenda = (buscaProduto.sales_price)
     const valorCusto = (buscaProduto.cost_price)
-    const novoValorVenda = (Number(infos.sales_price))
+    const novoValorVenda = (Number(infos))
 
     const reajusteProduto = (10/100) + 1
     const valorPermitido = valorVenda * reajusteProduto
@@ -117,11 +143,16 @@ async function validaPrecoProduto(id, infos) {
     console.log("Valor novo: " + Number(novoValorVenda))
 
     const reajuste = valorFixado !== novoValorVenda ? false : true
-    console.log(reajuste)
     if (Number(novoValorVenda) <= Number(valorCusto)) {
-        return "Novo Valor é menos ou igual ao valor de custo!";
+        return res.status(400).send({
+            sucess: false,
+            message: "Novo Valor é menos ou igual ao valor de custo!"
+        })
     } else if (reajuste === false) {
-        return "Reajsute está fora da % permitida!";
+        return res.status(400).send({
+            sucess: false,
+            message: "Reajsute está fora dos 10% permitido!"
+        })
     } else {
         return true;
     }

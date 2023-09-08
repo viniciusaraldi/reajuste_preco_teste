@@ -9,14 +9,14 @@
   "test": {
     "username": "root",
     "password": "123456",
-    "database": "database_test",
+    "database": "projeto_ajuste_preco",
     "host": "127.0.0.1",
     "dialect": "mysql"
   },
   "production": {
     "username": "root",
     "password": "123456",
-    "database": "database_production",
+    "database": "projeto_ajuste_preco",
     "host": "127.0.0.1",
     "dialect": "mysql"
   }
