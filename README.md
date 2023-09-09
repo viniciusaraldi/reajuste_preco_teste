@@ -8,12 +8,13 @@ Certifique-se de que o seu ambiente de desenvolvimento esteja configurado corret
 
 1. **[Clone do repositório:](https://github.com/viniciusaraldi/reajuste_preco_teste.git)**
 
-2. **Navegue até a pasta do back-end e Instale as dependências:**
+2. **Navegue até a pasta do back-end e Instale as dependências e depois re-faça para a pasta do front-end:**
   cd .\back-end\
   npm i
 
 Isso instalará todas as dependências necessárias para o projeto.
-
+Para rodar ambos, precisa-se colocar o seguinte código de linha: 
+  npm run dev
 
 ## Configurando o Banco de Dados MySQL
 
